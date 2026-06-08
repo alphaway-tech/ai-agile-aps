@@ -52,21 +52,19 @@ Mỗi REQ trong matrix có cột **GoLive** với 4 trạng thái:
 ### Bước 1 — Đọc 4 nguồn (targeted reads)
 
 ```bash
-# 1. Requirement ACs — đọc section headers trước, rồi targeted read
-grep -n "^### REQ-N\|^### REQ-" .claude/docs/requirements.md
-# → Read(requirements.md, offset=X, limit=20)
+# 1. Requirement ACs
+cat .claude/docs/requirements/REQ-N.md
 
 # 2. Tests hiện có
 grep -rn "// REQ-N" testing/specs/
 
 # 3. Code thực thi — fetch on-demand từ upstream (QC không có src/ local)
 git fetch upstream
-git show upstream/main:src/<path/to/file.ts>
-# Tìm file cần đọc:
 git ls-tree -r upstream/main --name-only | grep src/
+git show upstream/main:src/<path/to/file.ts>
 
-# 4. Design (nếu có section liên quan)
-grep -n "REQ-N\|related-keyword" .claude/docs/design.md
+# 4. Design của REQ
+cat .claude/docs/design/REQ-N.md
 ```
 
 > **Lưu ý:** QC workspace không có `src/` local. Mọi thao tác đọc source code đều qua
@@ -171,6 +169,27 @@ grep -rn "// REQ-[0-9]*" testing/specs/
 ```
 
 Tag format `// REQ-N.ACx` trên dòng ngay trên `test(` → biết TC đó cover AC nào.
+
+### Bước 3 — Fill TC Coverage vào TASK (sau khi viết TCs)
+
+Sau khi viết xong TCs cho REQ-N, tìm TASK tương ứng và update:
+
+```bash
+# Tìm TASK implement REQ-N
+grep -rn "REQ-N" .claude/docs/tasks/TASK-*.md | grep "Requirement References"
+```
+
+Mở `tasks/TASK-NNN.md`, điền vào section `## TC Coverage`:
+
+```markdown
+## TC Coverage
+| AC | Test name | Spec file |
+|----|-----------|-----------|
+| AC1 | tên test case | testing/specs/xxx.spec.ts |
+| AC2 | tên test case | testing/specs/xxx.spec.ts |
+```
+
+Push TASK file đã update lên master để DEV và PM biết TCs nào đang verify task của họ.
 
 ### Bước 3–5 — Cập nhật matrix
 

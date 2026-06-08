@@ -8,12 +8,13 @@ Workspace này dùng để **viết Acceptance Criteria từ User Stories**. BA 
 
 ## Skills available
 
-- `/requirements` — đọc US, viết/cập nhật ACs trong requirements.md
-- `/qa drift REQ-N` — kiểm tra implementation có đúng AC không (sau khi DEV xong)
+- `/requirements` — đọc US, tạo/cập nhật `requirements/REQ-N.md`
+- `/drift REQ-N` — kiểm tra implementation có đúng AC không (sau khi DEV xong)
 
 ## Files bạn own
 
-- `.claude/docs/requirements.md` — viết và maintain
+- `.claude/docs/requirements/_index.md` — index, glossary, CPs
+- `.claude/docs/requirements/REQ-N.md` — ACs cho từng REQ
 
 ## Files bạn update (status field only)
 
@@ -21,7 +22,7 @@ Workspace này dùng để **viết Acceptance Criteria từ User Stories**. BA 
 
 ## Files READ-ONLY
 
-- `design.md`, `tasks/`, `testing/`, `src/`
+- `design/`, `tasks/`, `testing/`, `src/`
 
 ## Workflow của BA
 

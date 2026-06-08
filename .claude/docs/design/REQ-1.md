@@ -1,29 +1,5 @@
-# Design Document — Todo Manager
-
-## Overview
-
-Todo Manager là ứng dụng web quản lý công việc cá nhân. Kiến trúc đơn giản, không cần backend ở v1 — dùng in-memory store.
-
----
-
-## Architecture
-
-```
-Browser
-  └── TodoList (component) ← FilterType state
-       ├── TodoForm (component) → createTodo()
-       └── TodoItem × N → toggleTodo() / deleteTodo()
-
-Data Layer:
-  TodoStore (in-memory Map)
-    ├── create(title, desc?) → Todo | throws
-    ├── toggleStatus(id) → Todo
-    ├── delete(id) → void
-    ├── list(filter) → Todo[] sorted by created_at DESC
-    └── count(filter) → number
-```
-
----
+# Design — REQ-1: Todo CRUD
+<!-- Last updated: TASK-001 (2026-06-08) -->
 
 ## Components
 
@@ -72,11 +48,3 @@ interface Todo {
 | count = items.length | CP-1: single source of truth, no separate counter variable |
 | Sorted in store.list() | AC3: list always sorted, caller never needs to sort |
 | createTodo wraps throws | Caller gets typed Result, no try/catch at component level |
-
----
-
-## Out of Scope (v1)
-
-- Persistent storage (localStorage/DB) → v2
-- Auth / multi-user → US-002
-- Due date / reminder → US-003

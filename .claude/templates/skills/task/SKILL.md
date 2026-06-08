@@ -30,17 +30,19 @@ description: Tạo và quản lý task trong tasks/ — mỗi task 1 file, index
 
 | Task type | Đọc gì |
 |---|---|
-| `feature` | `_index.md` + targeted sections của `requirements.md` + `design.md` + US liên quan |
-| `bugfix` | `_index.md` + targeted sections của `design.md` + code liên quan |
+| `feature` | `_index.md` + `requirements/_index.md` + `requirements/REQ-N.md` + `design/REQ-N.md` + US liên quan |
+| `bugfix` | `_index.md` + `design/REQ-N.md` + code liên quan |
 | `refactor` | `_index.md` + code liên quan |
 | `quick` | `_index.md` (chỉ cần TASK-ID tiếp theo) |
 
 **Targeted read:**
 ```bash
-# Xem section headers
-grep -n "^##" .claude/docs/requirements.md
-grep -n "^##\|^###" .claude/docs/design.md
-# → Read(file, offset=X, limit=60)
+# Xem REQ index
+cat .claude/docs/requirements/_index.md
+# Đọc REQ cụ thể
+cat .claude/docs/requirements/REQ-N.md
+# Đọc design của REQ đó
+cat .claude/docs/design/REQ-N.md
 ```
 
 Tìm ID tiếp theo:
@@ -63,8 +65,8 @@ Tạo `.claude/docs/tasks/TASK-NNN.md`:
 **Business Goal:** [Tại sao cần làm]
 
 **US Reference:** US-NNN
-**Requirement References:** REQ-N.ACx
-**Design References:** [Section trong design.md]
+**Requirement References:** REQ-N.ACx → [requirements/REQ-N.md](../requirements/REQ-N.md)
+**Design References:** [design/REQ-N.md](../design/REQ-N.md)
 
 **Impacted Files:**
 - `path/to/file`
@@ -85,10 +87,15 @@ Tạo `.claude/docs/tasks/TASK-NNN.md`:
 
 ### Predicted Impact
 **Requirement Impact:** none | [REQ nào cần thêm/sửa]
-**Design Impact:** none | [Section nào cần update]
+**Design Impact:** none | [design/REQ-N.md — section nào]
 
 ---
 *(Implementation Summary sẽ điền sau khi xong)*
+
+## TC Coverage
+<!-- QC điền sau khi viết TCs -->
+| AC | Test name | Spec file |
+|----|-----------|-----------|
 ```
 
 Thêm vào đầu bảng `_index.md`:
@@ -159,9 +166,9 @@ Completed At: YYYY-MM-DD
 ```
 
 ### 4. Update docs (không cần confirm)
-- `Requirement Impact != none` → cập nhật `requirements.md`
-- `Design Impact != none` → cập nhật `design.md`
-- Thêm `<!-- Last updated: TASK-NNN (YYYY-MM-DD) -->` vào section đã sửa
+- `Requirement Impact != none` → cập nhật `requirements/REQ-N.md` + `requirements/_index.md`
+- `Design Impact != none` → cập nhật `design/REQ-N.md` + `design/_index.md`
+- Thêm `<!-- Last updated: TASK-NNN (YYYY-MM-DD) -->` vào file đã sửa
 
 ### 4b. Regression Gate
 

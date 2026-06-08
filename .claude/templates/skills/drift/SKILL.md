@@ -23,8 +23,7 @@ git fetch upstream
 ### Bước 2 — Đọc Requirement ACs
 
 ```bash
-grep -n "### REQ-N" .claude/docs/requirements.md
-# → Read requirements.md tại đúng section, limit nhỏ
+cat .claude/docs/requirements/REQ-N.md
 ```
 
 ### Bước 3 — Đọc source code on-demand

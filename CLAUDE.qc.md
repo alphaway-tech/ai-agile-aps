@@ -25,9 +25,9 @@ Workspace này dùng để **viết test cases, gen auto scripts, chạy QA, mai
 
 ## Files READ-ONLY
 
-- `.claude/docs/requirements.md` (nguồn để viết TCs)
-- `.claude/docs/design.md` (hiểu architecture khi debug)
-- `src/` (đọc code để debug test fail)
+- `.claude/docs/requirements/REQ-N.md` (nguồn để viết TCs)
+- `.claude/docs/design/REQ-N.md` (hiểu architecture khi debug)
+- `src/` — đọc qua `git show upstream/main:src/...`, không có local
 
 ## Workflow của TEST
 
