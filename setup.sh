@@ -69,7 +69,9 @@ esac
 for skill in $ROLE_SKILL_LIST; do
   cp -r "$TEMPLATE_SKILLS/$skill" "$SKILLS_DIR/$skill"
 done
-echo "📦 Skills đã copy: $ROLE_SKILL_LIST"
+# drift là global skill — copy cho mọi role
+cp -r "$TEMPLATE_SKILLS/drift" "$SKILLS_DIR/drift"
+echo "📦 Skills đã copy: $ROLE_SKILL_LIST + drift (global)"
 
 # ── Testing folder — chỉ init cho QC ────────────────────────────────────────
 TEMPLATE_TESTING=".claude/templates/testing"
