@@ -5,7 +5,7 @@
 
 | US | Title | Priority | Status | Linked REQs | GoLive | Sprint |
 |----|-------|----------|--------|-------------|--------|--------|
-| — | — | — | — | — | — | — |
+| [US-001](US-001.md) | Todo CRUD | High | draft | — | ⬛ | Q3-S1 |
 
 ---
 
