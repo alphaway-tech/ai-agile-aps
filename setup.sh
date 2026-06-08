@@ -54,6 +54,22 @@ for r in "${VALID_ROLES[@]}"; do
 done
 echo "🗑️  Đã xóa tất cả CLAUDE.*.md (nội dung đã có trong CLAUDE.md)"
 
+# ── Skills — copy đúng skill cho từng role ───────────────────────────────────
+TEMPLATE_SKILLS=".claude/templates/skills"
+SKILLS_DIR=".claude/skills"
+mkdir -p "$SKILLS_DIR"
+
+declare -A ROLE_SKILLS
+ROLE_SKILLS["pm"]="pm"
+ROLE_SKILLS["ba"]="requirements"
+ROLE_SKILLS["dev"]="task design"
+ROLE_SKILLS["qc"]="qa testing"
+
+for skill in ${ROLE_SKILLS[$ROLE]}; do
+  cp -r "$TEMPLATE_SKILLS/$skill" "$SKILLS_DIR/$skill"
+done
+echo "📦 Skills đã copy: ${ROLE_SKILLS[$ROLE]}"
+
 # ── Testing folder — chỉ init cho QC ────────────────────────────────────────
 TEMPLATE_TESTING=".claude/templates/testing"
 
