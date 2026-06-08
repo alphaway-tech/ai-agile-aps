@@ -73,12 +73,158 @@ Là một [role], tôi muốn [hành động], để [lợi ích].
 <!-- QC điền sau khi chạy QA -->
 ```
 
-Commit với format:
-```
-us(US-NNN): [title] — draft
+### Sau khi tạo US-NNN.md — Auto-gen 3 stub tasks
+
+Lấy 3 TASK ID tiếp theo liên tiếp:
+```bash
+ls .claude/docs/tasks/TASK-*.md 2>/dev/null | sort -V | tail -1
+# → TASK-NNN, tăng lên: N, N+1, N+2
 ```
 
-Sau đó chạy `/pm sync` để cập nhật `_index.md`.
+Tạo 3 file stub trong `.claude/docs/tasks/`:
+
+**TASK-N.md (BA)**
+```markdown
+## TASK-N
+
+**Role:** BA
+**Status:** Ready
+**Type:** req-write
+**Title:** Viết ACs — US-NNN
+**US Reference:** US-NNN
+**Requirement References:** TBD
+**Design References:** TBD
+
+**Impacted Files:**
+- `.claude/docs/requirements/` (REQ mới)
+
+---
+
+### Approach
+*(BA điền khi bắt đầu — đọc US-NNN.md trước)*
+
+### Plan
+*(BA điền khi bắt đầu)*
+
+### Acceptance Criteria
+- [ ] requirements/REQ-N.md tạo với đủ ACs
+- [ ] US-NNN.md: status → ac-ready, Linked REQs: REQ-N
+
+### Predicted Impact
+**Requirement Impact:** REQ-N (mới)
+**Design Impact:** none
+**TC Impact:** none
+
+---
+*(Implementation Summary điền sau khi xong)*
+
+## TC Coverage
+| AC | Test name | Spec file |
+|----|-----------|-----------|
+```
+
+**TASK-N+1.md (DEV)**
+```markdown
+## TASK-N+1
+
+**Role:** DEV
+**Status:** Blocked ← TASK-N (BA req-write)
+**Type:** feature
+**Title:** Implement — US-NNN
+**US Reference:** US-NNN
+**Requirement References:** TBD (điền sau khi BA xong TASK-N)
+**Design References:** TBD
+
+**Impacted Files:**
+- `src/` (TBD)
+
+---
+
+### Approach
+*(DEV điền khi nhận handoff từ BA — đọc requirements/REQ-N.md trước)*
+
+### Plan
+*(DEV điền khi nhận handoff)*
+
+### Acceptance Criteria
+- [ ] Implement đúng ACs trong requirements/REQ-N.md
+- [ ] Regression Gate pass
+
+### Predicted Impact
+**Requirement Impact:** none
+**Design Impact:** design/REQ-N.md (mới)
+**TC Impact:** TBD
+
+---
+*(Implementation Summary điền sau khi xong)*
+
+## TC Coverage
+| AC | Test name | Spec file |
+|----|-----------|-----------|
+```
+
+**TASK-N+2.md (QC)**
+```markdown
+## TASK-N+2
+
+**Role:** QC
+**Status:** Blocked ← TASK-N+1 (DEV feature)
+**Type:** tc-write
+**Title:** Viết TCs — US-NNN
+**US Reference:** US-NNN
+**Requirement References:** TBD
+
+**Impacted Files:**
+- `testing/specs/` (TBD)
+
+---
+
+### Approach
+*(QC điền khi nhận handoff từ DEV — đọc requirements + design trước)*
+
+### Plan
+*(QC điền khi nhận handoff)*
+
+### Acceptance Criteria
+- [ ] TCs cover 100% testable ACs
+- [ ] All TCs pass (/qa run)
+- [ ] REQ-Coverage-Matrix updated
+
+### Predicted Impact
+**Requirement Impact:** none
+**Design Impact:** none
+**TC Impact:** testing/specs/ (mới)
+
+---
+*(Implementation Summary điền sau khi xong)*
+
+## TC Coverage
+| AC | Test name | Spec file |
+|----|-----------|-----------|
+```
+
+Thêm vào đầu bảng `tasks/_index.md`:
+```markdown
+| [TASK-N+2](TASK-N+2.md)   | QC  | Viết TCs — US-NNN    | tc-write  | Blocked ← TASK-N+1 | — |
+| [TASK-N+1](TASK-N+1.md)   | DEV | Implement — US-NNN   | feature   | Blocked ← TASK-N   | — |
+| [TASK-N](TASK-N.md)       | BA  | Viết ACs — US-NNN    | req-write | Ready              | — |
+```
+
+### Reminder cho PM (in ra sau khi tạo xong)
+
+```
+✅ US-NNN created
+📋 3 stub tasks auto-generated:
+   TASK-N   (BA)  req-write → Ready
+   TASK-N+1 (DEV) feature   → Blocked ← TASK-N
+   TASK-N+2 (QC)  tc-write  → Blocked ← TASK-N+1
+
+👉 Tiếp theo:
+   git add + commit: "us(US-NNN): [title] — draft"
+   Handoff sang BA: "handoff(US-NNN → BA): TASK-N Ready"
+```
+
+Chạy `/pm sync` để cập nhật `us/_index.md`.
 
 ---
 

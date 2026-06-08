@@ -18,12 +18,21 @@ description: Tạo và quản lý task — global skill cho mọi role, mỗi ar
 
 ---
 
+## Subcommands
+
+| Subcommand | Action |
+|---|---|
+| `/task` | Xác định hành động theo context (xem bên dưới) |
+| `/task status` | Hiện dashboard task của role hiện tại |
+
+---
+
 ## Bước 1: Xác định hành động
 
 - User **yêu cầu làm việc mới** → **TẠO TASK MỚI**
 - User **bảo "làm"** (hoặc: "proceed", "thực hiện", "ok làm đi") → **EXECUTE TASK**
 - User **báo task xong** hoặc vừa hoàn thành → **ĐÓNG TASK**
-- User **hỏi về task** → đọc `.claude/docs/tasks/_index.md` và trả lời
+- User **hỏi về task** / **`/task status`** → **MY TASK DASHBOARD**
 
 ---
 
@@ -52,6 +61,86 @@ description: Tạo và quản lý task — global skill cho mọi role, mỗi ar
 | `tc-fix` | Sửa TC assert sai behavior |
 | `tc-add` | Thêm TC còn thiếu (gap coverage) |
 | `matrix-sync` | Cập nhật REQ-Coverage-Matrix sau test run |
+
+---
+
+## MY TASK DASHBOARD (`/task status`)
+
+Hiện tất cả task được assign cho role hiện tại, nhóm theo action cần làm.
+
+### Logic đọc tasks
+
+```bash
+# Xác định role từ CLAUDE.md (dòng Role: trong header)
+grep "^# CLAUDE\|^Role:\|^## Role" CLAUDE.md | head -3
+
+# Lọc task files theo role
+grep -rl "^\*\*Role:\*\* BA" .claude/docs/tasks/TASK-*.md      # ví dụ BA
+grep -rl "^\*\*Role:\*\* DEV" .claude/docs/tasks/TASK-*.md     # DEV
+grep -rl "^\*\*Role:\*\* QC" .claude/docs/tasks/TASK-*.md      # QC
+
+# Với mỗi task file → đọc Status, Type, Title, US Reference
+grep "^\*\*Status:\|^\*\*Type:\|^\*\*Title:\|^\*\*US Reference:" TASK-NNN.md
+```
+
+### Output format
+
+```
+## My Tasks — [ROLE]
+Last sync: YYYY-MM-DD
+
+### 🔴 Action Required
+| Task | Title | Type | US | Status |
+|------|-------|------|----|--------|
+| TASK-007 | Viết ACs — US-001 | req-write | US-001 | Ready |
+| TASK-011 | Fix AC sai — US-002 | req-fix | US-002 | Pending Approval |
+
+### 🟡 In Progress
+| Task | Title | Type | US |
+|------|-------|------|----|
+| TASK-005 | Viết ACs — US-003 | req-write | US-003 |
+
+### ⏳ Waiting (Blocked)
+| Task | Title | Blocked by | US |
+|------|-------|------------|----|
+| TASK-010 | Viết ACs — US-004 | TASK-009 (DEV) | US-004 |
+
+### ✅ Done (5 gần nhất)
+| Task | Title | Type | Completed |
+|------|-------|------|-----------|
+| TASK-004 | Viết ACs — US-001-B | req-fix | 2026-06-06 |
+```
+
+### Next action hint (in kèm sau section Action Required)
+
+```
+👉 Việc cần làm:
+   TASK-007 (Ready): Đọc us/US-001.md → điền Approach + Plan → đổi status "Pending Approval"
+   TASK-011 (Pending Approval): Chờ confirm "làm" để bắt đầu
+```
+
+---
+
+## STATUS LEGEND
+
+| Status | Nghĩa | Ai set |
+|--------|-------|--------|
+| **Ready** | Stub task do PM tạo, role owner điền Plan rồi chuyển Pending Approval | PM auto-gen |
+| **Pending Approval** | Plan đã viết, chờ confirm "làm" | Role owner |
+| **In Progress** | Đang thực hiện | Role owner |
+| **Blocked ← TASK-N** | Chờ TASK-N hoàn thành trước, chưa thể bắt đầu | PM auto-gen |
+| **Done** | Hoàn thành, đã đóng | Role owner |
+| **Cancelled** | Hủy | PM |
+
+### Khi role owner nhận stub task (Ready)
+
+Không tạo task mới — stub đã có sẵn:
+
+1. Mở `TASK-N.md`
+2. Đọc US-NNN.md / requirements liên quan
+3. Điền **Approach** + **Plan** vào stub
+4. Đổi `Status: Ready` → `Status: Pending Approval`
+5. Thông báo: *"TASK-N plan đã sẵn sàng. Bảo tôi 'làm' khi muốn thực hiện."*
 
 ---
 
