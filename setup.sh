@@ -44,6 +44,19 @@ cp "$ROLE_FILE" CLAUDE.md
 echo "✅ CLAUDE.md đã được set cho role: $ROLE"
 echo "   (gitignored — chỉ tồn tại local, không push lên master)"
 
+# ── Xóa CLAUDE files của các role khác ───────────────────────────────────────
+for r in "${VALID_ROLES[@]}"; do
+  if [[ "$r" != "$ROLE" ]]; then
+    f="CLAUDE.${r}.md"
+    if [[ -f "$f" ]]; then
+      rm "$f"
+      # Báo git bỏ qua file bị xóa — không report "deleted" trong git status
+      git update-index --skip-worktree "$f" 2>/dev/null || true
+    fi
+  fi
+done
+echo "🗑️  Đã xóa CLAUDE files của các role khác"
+
 # ── Kiểm tra upstream remote ─────────────────────────────────────────────────
 if ! git remote | grep -q "$MASTER_REMOTE"; then
   echo ""
