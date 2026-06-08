@@ -1,53 +1,83 @@
 ---
-description: Tạo và quản lý task trong tasks/ — mỗi task 1 file, index ở _index.md, execute khi user bảo "làm"
+description: Tạo và quản lý task — global skill cho mọi role, mỗi artifact change phải có task
 ---
 
 # /task Skill
+
+**Global skill** — mọi role đều dùng khi có công việc thay đổi artifact thuộc scope của mình.
+
+## Nguyên tắc cốt lõi
+
+> Bất kỳ thay đổi nào đến `src/`, `design/`, `requirements/`, `testing/specs/`, `REQ-Coverage-Matrix.md` đều **phải có task** tương ứng, do role owner của artifact đó tạo.
+
+| Role | Tạo task khi thay đổi |
+|------|----------------------|
+| DEV  | `src/`, `design/REQ-N.md` |
+| BA   | `requirements/REQ-N.md` |
+| QC   | `testing/specs/`, `REQ-Coverage-Matrix.md` |
+
+---
 
 ## Bước 1: Xác định hành động
 
 - User **yêu cầu làm việc mới** → **TẠO TASK MỚI**
 - User **bảo "làm"** (hoặc: "proceed", "thực hiện", "ok làm đi") → **EXECUTE TASK**
-- User **báo task xong** hoặc vừa hoàn thành implement → **ĐÓNG TASK**
+- User **báo task xong** hoặc vừa hoàn thành → **ĐÓNG TASK**
 - User **hỏi về task** → đọc `.claude/docs/tasks/_index.md` và trả lời
 
 ---
 
 ## PHÂN LOẠI TASK
 
-| Type | Khi nào | Full plan | Impact analysis |
-|---|---|---|---|
-| `feature` | Tính năng mới, thay đổi behavior | Bắt buộc | Đầy đủ |
-| `bugfix` | Fix lỗi, sai behavior | Đầy đủ | Bắt buộc Lessons Learned |
-| `refactor` | Cải thiện code không đổi behavior | Đầy đủ | Không cần update requirements |
-| `quick` | ≤30 lines, 1 file, không có logic mới | Tóm tắt ngắn | Chỉ khi impact != none |
+### DEV tasks
+| Type | Khi nào |
+|------|---------|
+| `feature` | Implement tính năng mới từ REQ |
+| `bugfix` | Fix lỗi trong src/ (QC báo hoặc tự phát hiện) |
+| `refactor` | Cải thiện code không đổi behavior |
+| `design-update` | Cập nhật design/REQ-N.md sau thay đổi architecture |
+| `quick` | ≤30 lines, 1 file, không có logic mới |
+
+### BA tasks
+| Type | Khi nào |
+|------|---------|
+| `req-write` | Viết REQ mới từ US |
+| `req-fix` | Sửa AC sai sau drift analysis |
+| `req-clarify` | Làm rõ AC mơ hồ sau phản hồi từ DEV/QC |
+
+### QC tasks
+| Type | Khi nào |
+|------|---------|
+| `tc-write` | Viết TCs lần đầu cho REQ |
+| `tc-fix` | Sửa TC assert sai behavior |
+| `tc-add` | Thêm TC còn thiếu (gap coverage) |
+| `matrix-sync` | Cập nhật REQ-Coverage-Matrix sau test run |
 
 ---
 
 ## TẠO TASK MỚI
 
-### 1. Chuẩn bị — đọc theo task type (lazy load)
+### 1. Chuẩn bị — đọc theo role và task type
 
-| Task type | Đọc gì |
-|---|---|
-| `feature` | `_index.md` + `requirements/_index.md` + `requirements/REQ-N.md` + `design/REQ-N.md` + US liên quan |
-| `bugfix` | `_index.md` + `design/REQ-N.md` + code liên quan |
-| `refactor` | `_index.md` + code liên quan |
-| `quick` | `_index.md` (chỉ cần TASK-ID tiếp theo) |
-
-**Targeted read:**
+**DEV:**
 ```bash
-# Xem REQ index
-cat .claude/docs/requirements/_index.md
-# Đọc REQ cụ thể
-cat .claude/docs/requirements/REQ-N.md
-# Đọc design của REQ đó
-cat .claude/docs/design/REQ-N.md
+cat .claude/docs/requirements/REQ-N.md   # hiểu ACs cần implement
+cat .claude/docs/design/REQ-N.md         # hiểu design hiện tại
+ls .claude/docs/tasks/TASK-*.md | sort -V | tail -1  # lấy ID tiếp theo
 ```
 
-Tìm ID tiếp theo:
+**BA:**
 ```bash
-ls .claude/docs/tasks/TASK-*.md 2>/dev/null | sort -V | tail -1
+cat .claude/docs/us/US-NNN.md            # hiểu business context
+cat .claude/docs/requirements/REQ-N.md   # xem ACs hiện tại (nếu req-fix)
+ls .claude/docs/tasks/TASK-*.md | sort -V | tail -1
+```
+
+**QC:**
+```bash
+cat .claude/docs/requirements/REQ-N.md   # nguồn để viết TCs
+grep -rn "// REQ-N" testing/specs/       # TCs hiện có
+ls .claude/docs/tasks/TASK-*.md | sort -V | tail -1
 ```
 
 ### 2. Viết task file
@@ -59,8 +89,9 @@ Tạo `.claude/docs/tasks/TASK-NNN.md`:
 ```markdown
 ## TASK-NNN
 
+**Role:** DEV | BA | QC
 **Status:** Pending Approval
-**Type:** feature | bugfix | refactor | quick
+**Type:** [xem bảng phân loại trên]
 **Title:** [Tên ngắn gọn]
 **Business Goal:** [Tại sao cần làm]
 
@@ -88,25 +119,26 @@ Tạo `.claude/docs/tasks/TASK-NNN.md`:
 ### Predicted Impact
 **Requirement Impact:** none | [REQ nào cần thêm/sửa]
 **Design Impact:** none | [design/REQ-N.md — section nào]
+**TC Impact:** none | [TCs nào cần update/thêm]
 
 ---
 *(Implementation Summary sẽ điền sau khi xong)*
 
 ## TC Coverage
-<!-- QC điền sau khi viết TCs -->
+<!-- QC điền sau khi viết TCs (chỉ áp dụng với DEV feature/bugfix tasks) -->
 | AC | Test name | Spec file |
 |----|-----------|-----------|
 ```
 
 Thêm vào đầu bảng `_index.md`:
 ```markdown
-| [TASK-NNN](TASK-NNN.md) | Title | type | Pending Approval | — |
+| [TASK-NNN](TASK-NNN.md) | Role | Title | type | Pending Approval | — |
 ```
 
 ### 3. Thông báo
 *"TASK-NNN đã sẵn sàng. Bảo tôi 'làm' khi muốn thực hiện."*
 
-**Không tự động implement. Chờ user bảo "làm".**
+**Không tự động thực hiện. Chờ user bảo "làm".**
 
 ---
 
@@ -125,10 +157,10 @@ Khi user bảo "làm":
    Read(.claude/docs/tasks/TASK-NNN.md)
    ```
 
-2. Đọc kỹ: Approach, Plan, AC, Impacted Files.
-   **Plan là intent** — luôn đọc code thực tế trước khi implement.
+2. Đọc kỹ: Role, Type, Approach, Plan, AC, Impacted Files.
+   **Plan là intent** — luôn đọc artifact thực tế trước khi thay đổi.
 
-3. Implement đúng theo plan. Nếu plan có vấn đề → thông báo trước, không tự sửa.
+3. Thực hiện đúng theo plan. Nếu plan có vấn đề → thông báo trước, không tự sửa.
 
 4. Cập nhật `Status: In Progress`.
 
@@ -139,38 +171,45 @@ Khi user bảo "làm":
 ## ĐÓNG TASK
 
 ### 1. Phân tích impact
-Đọc toàn bộ file đã sửa + dependencies. Xác định data flow, edge cases.
+Đọc toàn bộ artifact đã sửa + dependencies. Xác định ripple effects.
 
 ### 2. Cập nhật file task
 
 ```
 **Status:** Done
 
-Implementation Summary: [1-3 câu]
+Implementation Summary: [1-3 câu mô tả những gì đã thay đổi]
 
 Changed Files:
-- `path/file` lines X–Y: [mô tả]
+- `path/file`: [mô tả thay đổi]
 
 System Impact Analysis:
 [Data flow, dependencies, edge cases, ripple effects]
 
-Requirement Impact: none | [REQ cần thêm/sửa]
-Design Impact: none | [Section cần update]
-Lessons Learned: [Bất ngờ, cạm bẫy]
+Requirement Impact: none | [REQ nào cần thêm/sửa]
+Design Impact: none | [design/REQ-N.md — section nào]
+TC Impact: none | [TCs nào cần update/thêm]
+Lessons Learned: [Bất ngờ, cạm bẫy — bắt buộc với bugfix/tc-fix]
 Completed At: YYYY-MM-DD
 ```
 
 ### 3. Cập nhật `_index.md`
 ```markdown
-| [TASK-NNN](TASK-NNN.md) | Title | type | Done | YYYY-MM-DD |
+| [TASK-NNN](TASK-NNN.md) | Role | Title | type | Done | YYYY-MM-DD |
 ```
 
-### 4. Update docs (không cần confirm)
-- `Requirement Impact != none` → cập nhật `requirements/REQ-N.md` + `requirements/_index.md`
-- `Design Impact != none` → cập nhật `design/REQ-N.md` + `design/_index.md`
-- Thêm `<!-- Last updated: TASK-NNN (YYYY-MM-DD) -->` vào file đã sửa
+### 4. Update artifacts liên quan (không cần confirm)
 
-### 4b. Regression Gate
+| Role | Khi nào | Cập nhật gì |
+|------|---------|-------------|
+| DEV | Requirement Impact != none | `requirements/REQ-N.md` + `_index.md` |
+| DEV | Design Impact != none | `design/REQ-N.md` + `design/_index.md` |
+| BA | req-fix/req-clarify | `requirements/REQ-N.md` |
+| QC | tc-write/tc-fix/tc-add | `testing/specs/` + `REQ-Coverage-Matrix.md` |
+
+Thêm `<!-- Last updated: TASK-NNN (YYYY-MM-DD) -->` vào file đã sửa.
+
+### 5. Regression Gate (DEV tasks only)
 
 **Nhánh A — Simple** (Requirement + Design Impact đều none):
 1. Map impacted files → spec files tương ứng
@@ -179,67 +218,45 @@ Completed At: YYYY-MM-DD
 
 **Nhánh B — Complex** (có Requirement hoặc Design Impact):
 1. Xác định REQs bị ảnh hưởng
-2. `/qa drift REQ-N` cho từng REQ liên quan
-3. Drift nhỏ → fix inline. Drift lớn → tạo task riêng
+2. `/drift REQ-N` cho từng REQ liên quan
+3. Drift nhỏ → fix inline. Drift lớn → BA tạo `req-fix` task riêng
 4. Chạy: `cd testing && npx [test-runner] [spec-file]`
 5. Báo cáo: **X passed / Y failed**
 
-**Nếu test fail → đề xuất 3 phương án, chờ user quyết định:**
+**Nếu test fail → đề xuất 3 phương án:**
 | Phương án | Khi nào |
 |---|---|
 | A) Fix source code | Code mới gây regression thực sự |
-| B) Fix test case | Test assert sai behavior sau spec change |
+| B) QC tạo tc-fix task | TC assert sai behavior sau spec change |
 | C) Skip có lý do | Test fragile / ngoài scope task này |
 
-### 5. Handoff commit (cần user confirm)
+### 6. Handoff commit (cần user confirm)
 
-Dùng format handoff để QC nhận tín hiệu:
 ```
-handoff(US-NNN → QC): TASK-NNN done — REQ-N sẵn test
-```
-
-QC nhận tín hiệu: `git log --oneline --grep="handoff.*QC"`
-
-### 6. Commit git (nếu cần commit riêng)
-
-**Feature:**
-```
-feat(scope): mô tả ngắn (TASK-NNN)
-
-[Business goal — 1-2 câu]
-
-Changes:
-- [file chính: thay đổi gì]
-
-US: US-NNN | REQ: REQ-N
+handoff(US-NNN → ROLE): TASK-NNN done — [mô tả ngắn]
 ```
 
-**Bugfix:**
-```
-fix(scope): mô tả ngắn (TASK-NNN)
-
-Root cause: [ngắn gọn]
-Fix: [thay đổi chính]
-```
-
-**Quick/Refactor:**
-```
-fix/refactor(scope): mô tả ngắn (TASK-NNN)
-```
+| Role hiện tại | Handoff sang |
+|---------------|-------------|
+| BA (req-write) | `→ DEV` |
+| DEV (feature/bugfix) | `→ QC` |
+| QC (tc-write, all pass) | `→ PM` |
+| QC (fail) | `→ DEV` |
 
 ---
 
-## QUICK FIX
+## QUICK TASK
 
-≤30 lines, 1 file — tạo task gọn và implement luôn:
+≤30 lines, 1 file — tạo và implement ngay:
 
 ```markdown
-## TASK-NNN (Quick Fix)
+## TASK-NNN (Quick)
 
+**Role:** DEV | BA | QC
 **Status:** Done
 **Type:** quick
 **Title:** [Mô tả ngắn]
-**Changed:** `path/file` lines X–Y: [mô tả]
+**Changed:** `path/file`: [mô tả]
 **Impact:** none | minor
 **Git Commit:** <hash7> — "<subject>" | skipped
 **Completed At:** YYYY-MM-DD
