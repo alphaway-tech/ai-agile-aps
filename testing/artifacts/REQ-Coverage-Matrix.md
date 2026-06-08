@@ -1,6 +1,6 @@
 # REQ Coverage Matrix
 
-**Project:** [PROJECT_NAME]  
+**Project:** Todo Manager  
 **Updated:** YYYY-MM-DD · **Total TCs:** 0 · **Latest run:** —
 
 | Metric | Formula | Covered / Total | % |

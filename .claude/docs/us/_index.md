@@ -1,6 +1,6 @@
 # US Dashboard
 
-**Project:** [PROJECT_NAME]  
+**Project:** Todo Manager  
 **Updated:** YYYY-MM-DD
 
 | US | Title | Priority | Status | Linked REQs | GoLive | Sprint |

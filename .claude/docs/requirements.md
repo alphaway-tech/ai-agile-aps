@@ -1,4 +1,4 @@
-# Requirements Document — [PROJECT_NAME]
+# Requirements Document — Todo Manager
 
 > Khởi tạo bằng lệnh `/requirements init` sau khi setup project.  
 > Hoặc `/requirements US-001` khi BA nhận US đầu tiên từ PM.

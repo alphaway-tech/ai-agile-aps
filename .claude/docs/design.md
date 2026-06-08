@@ -1,4 +1,4 @@
-# Design Document — [PROJECT_NAME]
+# Design Document — Todo Manager
 
 > Khởi tạo bằng lệnh `/design` sau khi setup project và có codebase.
 

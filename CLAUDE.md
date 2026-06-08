@@ -5,7 +5,7 @@
 **Agile AI APS** là bộ khung workflow tích hợp Claude Code cho team 4 roles: **PM → BA → DEV → TEST**.  
 Mỗi role sử dụng workspace riêng, phối hợp qua `project-master` repo.
 
-> Thay `[PROJECT_NAME]` bằng tên project thực tế sau khi init.
+> Thay `Todo Manager` bằng tên project thực tế sau khi init.
 
 ---
 

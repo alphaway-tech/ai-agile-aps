@@ -1,6 +1,6 @@
 # Task Index
 
-**Project:** [PROJECT_NAME]
+**Project:** Todo Manager
 
 | Task | Title | Type | Status | Completed |
 |------|-------|------|--------|-----------|
