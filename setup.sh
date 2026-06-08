@@ -93,6 +93,19 @@ else
   echo "📋 testing/artifacts/ có sẵn để đọc (REQ Coverage Matrix)"
 fi
 
+# ── src/ — chỉ DEV và QC cần ────────────────────────────────────────────────
+if [[ "$ROLE" != "dev" && "$ROLE" != "qc" ]]; then
+  if [[ -d src ]]; then
+    find src -type f | while read f; do
+      git update-index --skip-worktree "$f" 2>/dev/null || true
+      rm -f "$f"
+    done
+    find src -mindepth 1 -type d -empty -delete 2>/dev/null || true
+    rmdir src 2>/dev/null || true
+  fi
+  echo "🚫 src/ đã ẩn (không cần cho role $ROLE)"
+fi
+
 # ── Kiểm tra upstream remote ─────────────────────────────────────────────────
 if ! git remote | grep -q "$MASTER_REMOTE"; then
   echo ""
