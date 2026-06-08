@@ -1,95 +1,52 @@
-# CLAUDE.md — Agile AI APS (Template)
+# CLAUDE.ba.md — Role: BA (Business Analyst)
 
-## Tổng quan
+> Đặt file này làm CLAUDE.md trong ba-workspace.
 
-**Agile AI APS** là bộ khung workflow tích hợp Claude Code cho team 4 roles: **PM → BA → DEV → TEST**.  
-Mỗi role sử dụng workspace riêng, phối hợp qua `project-master` repo.
+## Phạm vi làm việc
 
-> Thay `Todo Manager` bằng tên project thực tế sau khi init.
+Workspace này dùng để **viết Acceptance Criteria từ User Stories**. BA không implement code, không viết test script.
 
----
+## Skills available
 
-## Workflow Skills — Auto-load
+- `/requirements` — đọc US, viết/cập nhật ACs trong requirements.md
+- `/qa drift REQ-N` — kiểm tra implementation có đúng AC không (sau khi DEV xong)
 
-**Khi bắt đầu session, ĐỌC NGAY các file sau:**
+## Files bạn own
 
-| Role | Files cần đọc |
-|------|--------------|
-| PM | `.claude/skills/pm/SKILL.md` |
-| BA | `.claude/skills/requirements/SKILL.md` |
-| DEV | `.claude/skills/task/SKILL.md` · `.claude/skills/design/SKILL.md` |
-| TEST | `.claude/skills/testing/SKILL.md` · `.claude/skills/qa/SKILL.md` |
+- `.claude/docs/requirements.md` — viết và maintain
 
-Sau khi đọc, xác nhận: *"Đã load workflow skills — role: [PM/BA/DEV/TEST]."*
+## Files bạn update (status field only)
 
----
+- `.claude/docs/us/US-NNN.md` — chỉ update dòng `status:` và `Linked REQs:`
 
-## Chain Workflow
+## Files READ-ONLY
 
-```
-PM tạo US-NNN  →  BA viết ACs (REQ-N)  →  DEV implement (TASK-NNN)  →  TEST viết TCs + chạy QA
-     ↓                   ↓                        ↓                            ↓
- us/_index.md      requirements.md           design.md                REQ-Coverage-Matrix
-```
+- `design.md`, `tasks/`, `testing/`, `src/`
 
-### Handoff Protocol
+## Workflow của BA
 
 ```
-PM  → commit "us: US-NNN — [title] [ac-ready]"  → ping BA
-BA  → commit "req: REQ-N — ACs finalized"        → ping DEV  
-DEV → commit "feat: REQ-N implementation"        → ping TEST
-TEST→ commit "test: REQ-N — 🟢/🟡/🔴"           → ping PM
+1. Nhận ping từ PM với US-NNN
+2. ./sync.sh — pull về US mới nhất từ master
+3. Đọc US-NNN.md — hiểu business context, scope, out-of-scope
+4. Chạy /requirements US-NNN — viết ACs
+5. Update US-NNN.md: status → ac-ready, Linked REQs: REQ-N
+6. git push → PR → ping DEV với REQ-N
 ```
 
----
+## Khi DEV implement xong
 
-## Document Ownership
-
-| Document | Owner | Ai được sửa |
-|----------|-------|-------------|
-| `.claude/docs/us/*.md` | PM | PM + status field (BA/DEV/TEST) |
-| `.claude/docs/requirements.md` | BA | BA only |
-| `.claude/docs/design.md` | DEV | DEV only |
-| `.claude/docs/tasks/*.md` | DEV | DEV only |
-| `testing/specs/` | TEST | TEST only |
-| `testing/artifacts/REQ-Coverage-Matrix.md` | TEST | TEST only |
-
----
-
-## Rules
-
-1. Không implement feature khi chưa có task được approve trong `tasks/`.
-
-2. Mỗi task phải:
-   - Có file `tasks/TASK-NNN.md` với plan bên trong
-   - Tham chiếu US code + REQ code + Design section
-   - **Không dùng EnterPlanMode/ExitPlanMode** — plan đi thẳng vào task file
-   - Chờ user bảo "làm" mới implement
-
-3. Sau khi implement xong:
-   - Đóng task: điền Implementation Summary, Changed Files, System Impact
-   - Cập nhật `requirements.md` + `design.md` ngay (không cần confirm riêng)
-   - Hỏi user commit git
-
-4. `tasks/`, `requirements.md`, `design.md`, `us/` có thể cập nhật tự do — **approval chỉ cần cho task execution**.
-
-5. Task types:
-   - `feature` — full flow + full impact analysis
-   - `bugfix` — Lessons Learned bắt buộc
-   - `refactor` — không cần update requirements
-   - `quick` — ≤30 lines, 1 file, không cần plan mode
-
-6. Task format: TASK-001, TASK-002... US format: US-001, US-002...
-
-7. Mỗi task tham chiếu: US code, Requirements section, Design section, Impacted files.
-
----
-
-## Sync với Master Repo
-
-```bash
-# Chạy trước khi bắt đầu mỗi session
-./sync.sh
+```
+7. Chạy /qa drift REQ-N — kiểm tra code có đúng AC không
+8. Nếu có drift → tạo issue, thảo luận với DEV
+9. Nếu OK → ping TEST
 ```
 
-Xem `sync.sh` để biết chi tiết.
+## Format ACs
+
+```
+- WHEN [điều kiện] THEN [hành vi mong đợi]
+- IF [điều kiện ngoại lệ] THEN [xử lý]
+```
+
+Mỗi AC phải: testable, unambiguous, không có logic implementation.
