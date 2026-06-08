@@ -59,16 +59,17 @@ TEMPLATE_SKILLS=".claude/templates/skills"
 SKILLS_DIR=".claude/skills"
 mkdir -p "$SKILLS_DIR"
 
-declare -A ROLE_SKILLS
-ROLE_SKILLS["pm"]="pm"
-ROLE_SKILLS["ba"]="requirements"
-ROLE_SKILLS["dev"]="task design"
-ROLE_SKILLS["qc"]="qa testing"
+case "$ROLE" in
+  pm)  ROLE_SKILL_LIST="pm" ;;
+  ba)  ROLE_SKILL_LIST="requirements" ;;
+  dev) ROLE_SKILL_LIST="task design" ;;
+  qc)  ROLE_SKILL_LIST="qa testing" ;;
+esac
 
-for skill in ${ROLE_SKILLS[$ROLE]}; do
+for skill in $ROLE_SKILL_LIST; do
   cp -r "$TEMPLATE_SKILLS/$skill" "$SKILLS_DIR/$skill"
 done
-echo "📦 Skills đã copy: ${ROLE_SKILLS[$ROLE]}"
+echo "📦 Skills đã copy: $ROLE_SKILL_LIST"
 
 # ── Testing folder — chỉ init cho QC ────────────────────────────────────────
 TEMPLATE_TESTING=".claude/templates/testing"
