@@ -31,3 +31,7 @@ testing/artifacts/report.json
 
 # Claude local settings
 .claude/settings.local.json
+
+# Role-specific CLAUDE.md — each workspace generates via: ./setup.sh [role]
+# CLAUDE.*.md (role templates) are tracked; CLAUDE.md is local-only
+CLAUDE.md
