@@ -65,7 +65,121 @@
 
 ---
 
-## 2. Vai trò & Ownership
+## 2. Manual vs Automated — Per Role
+
+> **🤖 Tự động** = script/hook chạy không cần user trigger  
+> **🧠 AI-assisted** = Claude Code thực hiện khi user gọi skill/command  
+> **✍️ Thủ công** = user phải tự làm, không có automation
+
+---
+
+### PM
+
+| Bước | Loại | Chi tiết |
+|------|------|---------|
+| Tạo US-NNN.md | 🧠 AI-assisted | `/pm create US-NNN` — Claude Code viết file |
+| Auto-gen 3 stub tasks | 🧠 AI-assisted | Trong `/pm create` — Claude tạo TASK-N, N+1, N+2 |
+| Cập nhật `us/_index.md` | 🤖 Tự động | `sync-index.sh` chạy ngay sau Write/Edit US-NNN.md |
+| Cập nhật `tasks/_index.md` | 🤖 Tự động | `sync-index.sh` chạy ngay sau Write/Edit TASK-*.md |
+| Nhận báo cáo QC 🟢 | ✍️ Thủ công | Đọc git log / handoff message |
+| `/pm done US-NNN` | 🧠 AI-assisted | Claude update status → done |
+| Xem handoff log | 🧠 AI-assisted | `/pm handoffs` → `git log --grep="handoff"` |
+
+**Còn thủ công:** quyết định priority, sprint assignment, escalation khi qc_dev_rounds ≥ 2.
+
+---
+
+### BA
+
+| Bước | Loại | Chi tiết |
+|------|------|---------|
+| Nhận handoff từ PM | 🤖 Tự động | `detect-handoff.sh` đổi TASK-N → **Ready** khi PM commit |
+| Đọc US-NNN.md | ✍️ Thủ công | BA tự đọc business context |
+| Viết requirements/REQ-N.md | 🧠 AI-assisted | `/requirements US-NNN` — Claude Code viết ACs |
+| Update US status → ac-ready | 🧠 AI-assisted | Trong `/requirements` workflow |
+| Cập nhật `tasks/_index.md` | 🤖 Tự động | `sync-index.sh` sau khi TASK-N.md được Edit |
+| Commit + handoff → DEV | ✍️ Thủ công | BA tự commit đúng format `handoff(US-NNN → DEV)` |
+| TASK-N+1 unblock | 🤖 Tự động | `detect-handoff.sh` đổi DEV task → Ready |
+| TASK-N+2 unblock (tc-draft) | 🤖 Tự động | `detect-handoff.sh` đổi QC task → Ready |
+
+**Còn thủ công:** phán đoán AC (WHEN/THEN), xác định edge cases, quyết định scope.
+
+---
+
+### DEV
+
+| Bước | Loại | Chi tiết |
+|------|------|---------|
+| Nhận handoff từ BA | 🤖 Tự động | `detect-handoff.sh` đổi TASK-N+1 → **Ready** |
+| git pull | ✍️ Thủ công | DEV tự pull trước khi bắt đầu |
+| Đọc requirements + design | ✍️ Thủ công | DEV tự đọc context |
+| Tạo task plan | 🧠 AI-assisted | `/task` — Claude đọc REQ + viết Approach/Plan |
+| `/design draft REQ-N` | 🧠 AI-assisted | Claude tạo design/REQ-N.md **(bắt buộc trước khi code)** |
+| Design gate check | 🧠 AI-assisted | `/task execute` tự kiểm tra design/REQ-N.md tồn tại |
+| Update US → in-dev | 🧠 AI-assisted | Claude edit frontmatter trong task execute |
+| Implement src/ | ✍️ Thủ công | DEV viết code (Claude Code hỗ trợ qua chat) |
+| `/design verify REQ-N` | 🧠 AI-assisted | Claude so sánh code vs draft, ghi deviation |
+| Update US → in-test | 🧠 AI-assisted | Claude edit frontmatter khi đóng task |
+| Cập nhật `tasks/_index.md` | 🤖 Tự động | `sync-index.sh` sau Edit TASK-N+1.md |
+| git push + PR | ✍️ Thủ công | DEV tự push và tạo PR |
+| Commit + handoff → QC | ✍️ Thủ công | DEV tự commit đúng format `handoff(US-NNN → QC)` |
+| TASK-N+2 unblock (tc-run) | 🤖 Tự động | `detect-handoff.sh` đổi QC task → Ready |
+
+**Còn thủ công:** logic code, code review, debug, quyết định kiến trúc.
+
+---
+
+### QC
+
+| Bước | Loại | Chi tiết |
+|------|------|---------|
+| Nhận handoff từ BA (tc-draft) | 🤖 Tự động | `detect-handoff.sh` đổi TASK-N+2 → **Ready** |
+| Nhận handoff từ DEV (tc-run) | 🤖 Tự động | `detect-handoff.sh` đổi TASK-N+2 → Ready (lần 2) |
+| git pull | ✍️ Thủ công | QC tự pull để lấy src/ mới nhất |
+| Đọc requirements + design | ✍️ Thủ công | QC tự đọc |
+| Viết TC skeleton (tc-draft) | 🧠 AI-assisted | Claude Code viết từ requirements + design "Test Entry Points" |
+| `/regression task TASK-N+1` | 🧠 AI-assisted | Claude phân tích scope → đề xuất bộ TCs cần chạy |
+| QC xác nhận bộ TCs | ✍️ Thủ công | QC review và quyết định có chạy hay không |
+| Finalize TCs | ✍️ Thủ công | QC bổ sung assertions, page objects |
+| `/qa run REQ-N` | 🧠 AI-assisted | Claude chạy Playwright, đọc kết quả |
+| `/qa matrix` | 🧠 AI-assisted | Claude sync REQ-Coverage-Matrix từ report.json |
+| Điền TC Coverage vào DEV task | 🧠 AI-assisted | Claude edit TASK-N+1.md section TC Coverage |
+| Cập nhật `tasks/_index.md` | 🤖 Tự động | `sync-index.sh` sau Edit TASK-N+2.md |
+| Structured bug report | 🧠 AI-assisted | Claude format bug table khi FAIL |
+| Tăng `qc_dev_rounds` | ✍️ Thủ công | QC edit frontmatter US-NNN.md |
+| Escalate ≥ 2 rounds | ✍️ Thủ công | QC add warning vào commit + US file |
+| Commit + handoff → PM/DEV | ✍️ Thủ công | QC tự commit đúng format |
+
+**Còn thủ công:** viết assertions chất lượng, phán đoán "code bug vs TC bug", quyết định test coverage đủ chưa.
+
+---
+
+## 3. Tóm tắt Automation Coverage
+
+```
+Loại                        | Tự động | AI-assisted | Thủ công
+─────────────────────────────────────────────────────────────
+Index sync (_index.md)      |   ✅    |             |
+Handoff detection           |   ✅    |             |
+Task unblock                |   ✅    |             |
+Tạo US / Stub tasks         |         |     ✅      |
+Viết ACs (BA)               |         |     ✅      |
+Viết design (DEV)           |         |     ✅      |
+Design gate enforce         |         |     ✅      |
+Regression analysis         |         |     ✅      |
+Chạy tests + matrix         |         |     ✅      |
+TC Coverage fill            |         |     ✅      |
+Bug report format           |         |     ✅      |
+Viết code (DEV)             |         |             |    ✅
+Viết assertions (QC)        |         |             |    ✅
+git pull / push / PR        |         |             |    ✅
+Quyết định scope/priority   |         |             |    ✅
+Escalation judgment         |         |             |    ✅
+```
+
+---
+
+## 4. Vai trò & Ownership
 
 | Role | Owns | Skills | READ-ONLY |
 |------|------|--------|-----------|
@@ -76,7 +190,7 @@
 
 ---
 
-## 3. Lifecycle
+## 5. Lifecycle
 
 ### US Status
 
@@ -95,7 +209,7 @@
 
 ---
 
-## 4. Handoff Protocol
+## 6. Handoff Protocol
 
 Mọi handoff dùng git commit format:
 
@@ -108,13 +222,13 @@ Xem log handoffs:
 git log --oneline --grep="^handoff"
 ```
 
-### Auto-detection (tự động)
+### Auto-detection
 
-Mỗi khi commit có handoff pattern, script `.claude/hooks/detect-handoff.sh` tự động:
+Khi commit có pattern trên, `detect-handoff.sh` tự động:
 1. Parse US code + target ROLE
-2. Tìm task file của ROLE đó cho US đó (Status: Blocked)
-3. Đổi Status → **Ready** và stage file
-4. Print thông báo cho role nhận
+2. Tìm TASK của ROLE đó đang Blocked cho US đó
+3. Đổi Status → **Ready** + stage file
+4. Print thông báo
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -126,26 +240,21 @@ Mỗi khi commit có handoff pattern, script `.claude/hooks/detect-handoff.sh` t
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-**Setup (1 lần sau clone):**
-```bash
-bash .claude/setup-hooks.sh
-```
-
-Script tự động chạy qua 2 lớp:
+Chạy qua 2 lớp:
 - **Claude Code hook** (`settings.json`) — khi Claude chạy git commit
-- **Git post-commit hook** (sau `setup-hooks.sh`) — khi user commit tay
+- **Git post-commit hook** (`bash .claude/setup-hooks.sh`) — khi user commit tay
 
 | Từ | Sang | Khi nào |
 |----|------|---------|
 | PM | BA | US created, TASK-N Ready |
-| BA | DEV | requirements/REQ-N.md xong, ac-ready |
+| BA | DEV + QC | REQ-N.md xong (DEV unblock + QC tc-draft unblock đồng thời) |
 | DEV | QC | src/ + design done, in-test |
-| QC | PM | All TCs pass, 🟢 |
+| QC | PM | All TCs pass 🟢 |
 | QC | DEV | TCs fail — kèm bug report |
 
 ---
 
-## 5. Chi tiết từng Role
+## 7. Chi tiết từng Role
 
 ### PM
 
@@ -156,6 +265,7 @@ Script tự động chạy qua 2 lớp:
      TASK-N   (BA)  req-write → Ready
      TASK-N+1 (DEV) feature   → Blocked ← TASK-N
      TASK-N+2 (QC)  tc-write  → Blocked ← TASK-N [phase: tc-draft]
+  → us/_index.md + tasks/_index.md tự động rebuild  [🤖]
   → commit + handoff → BA
 
 /pm list        → dashboard tất cả USs
@@ -168,11 +278,10 @@ Script tự động chạy qua 2 lớp:
 ### BA
 
 ```
-Nhận: handoff(US-NNN → BA): TASK-N Ready
+Nhận: handoff(US-NNN → BA)  [🤖 detect-handoff.sh → TASK-N: Ready]
   │
   ├─ Đọc us/US-NNN.md
-  ├─ Mở TASK-N.md → điền Approach + Plan
-  ├─ Status: Ready → Pending Approval
+  ├─ /task → TASK-N.md: Approach + Plan → Pending Approval
   ├─ Chờ user: "làm"
   │
   └─ EXECUTE:
@@ -180,10 +289,10 @@ Nhận: handoff(US-NNN → BA): TASK-N Ready
          → tạo requirements/REQ-N.md
          → viết ACs dạng WHEN/THEN
          → update US: status → ac-ready, Linked REQs: REQ-N
-       TASK-N: Done
-       handoff(US-NNN → DEV): "REQ-N ready — X ACs"
-       → TASK-N+1 (DEV) unblock
-       → TASK-N+2 (QC, tc-draft) unblock  ← đồng thời
+       TASK-N: Done  [🤖 tasks/_index.md rebuild]
+       handoff(US-NNN → DEV): "REQ-N ready — X ACs"  [✍️ manual commit]
+       → TASK-N+1 (DEV) unblock   [🤖]
+       → TASK-N+2 (QC, tc-draft) unblock  [🤖] đồng thời
 ```
 
 ---
@@ -191,37 +300,26 @@ Nhận: handoff(US-NNN → BA): TASK-N Ready
 ### DEV
 
 ```
-Nhận: handoff(US-NNN → DEV): TASK-N+1 unblock
+Nhận: handoff(US-NNN → DEV)  [🤖 detect-handoff.sh → TASK-N+1: Ready]
   │
-  ├─ git pull origin main
-  ├─ Đọc: requirements/REQ-N.md + us/US-NNN.md + design/REQ-N.md
+  ├─ git pull  [✍️]
+  ├─ Đọc requirements + design + US  [✍️]
   ├─ /task → TASK-N+1.md: Approach + Plan → Pending Approval
   ├─ Chờ user: "làm"
   │
   └─ EXECUTE:
-       update US: status → in-dev
-       Read context: requirements + design/REQ-N.md + src/ liên quan
-       │
-       ├─ [Complex task: ≥3 files / data model change]
-       │    draft design/REQ-N.md skeleton TRƯỚC khi code
-       │
-       Implement src/
-       /design → tạo/cập nhật design/REQ-N.md
-       update US: status → in-test
-       TASK-N+1: Done (điền Implementation Summary, Changed Files, TC Impact)
-       git push → PR
-       handoff(US-NNN → QC): "TASK-N+1 done"
-       → TASK-N+2 (QC, tc-run) unblock
-```
-
-**PR Description Template:**
-```markdown
-## TASK-N+1 — [Title]
-**US:** US-NNN | **REQ:** REQ-N
-### Changed Files
-- `src/file`: mô tả
-### TC Impact
-none | [TCs nào QC cần update]
+       update US: in-dev  [🧠]
+       /design draft REQ-N  [🧠 bắt buộc trước khi code]
+         → design/REQ-N.md (Status: draft)
+         → QC đọc để viết tc-draft song song
+       Design gate check  [🧠 tự kiểm tra trong /task execute]
+       Implement src/  [✍️]
+       /design verify REQ-N  [🧠 so sánh code vs draft → Status: done]
+       update US: in-test  [🧠]
+       TASK-N+1: Done  [🤖 tasks/_index.md rebuild]
+       git push → PR  [✍️]
+       handoff(US-NNN → QC): "TASK-N+1 done"  [✍️ manual commit]
+       → TASK-N+2 (QC, tc-run) unblock  [🤖]
 ```
 
 ---
@@ -229,115 +327,104 @@ none | [TCs nào QC cần update]
 ### QC
 
 ```
-Phase 1 — tc-draft (unblock khi BA done TASK-N)
-  │
-  ├─ git pull origin main
-  ├─ Đọc requirements/REQ-N.md
-  ├─ Viết TC skeleton: file + describe + test stubs (GIVEN/WHEN/THEN)
-  ├─ KHÔNG chạy tests
-  └─ git push origin main  ← DEV sẽ pull được khi cần
+Phase 1 — tc-draft
+  Nhận: handoff(US-NNN → BA done)  [🤖 → TASK-N+2: Ready, phase tc-draft]
+  ├─ Đọc requirements/REQ-N.md + design/REQ-N.md (draft)  [✍️]
+  ├─ Viết TC skeleton: stubs từ Test Entry Points trong design  [🧠]
+  └─ git push tc-draft  [✍️]
 
-Phase 2 — tc-run (unblock khi DEV done TASK-N+1)
+Phase 2 — tc-run
+  Nhận: handoff(US-NNN → DEV done)  [🤖 → TASK-N+2: Ready, phase tc-run]
   │
-  ├─ git pull origin main  (lấy src/ mới nhất + design/REQ-N.md)
+  ├─ git pull  [✍️]
+  ├─ /regression task TASK-N+1  [🧠]
+  │    AI: Changed Files → REQs → TCs → Risk (🔴🟡🟢⬛)
+  │    Output: bộ TCs khuyến nghị
+  │    QC xác nhận  [✍️]
   │
-  ├─ /regression task TASK-N+1
-  │    AI phân tích: Changed Files → REQs → TCs (direct + transitive)
-  │    Risk: 🔴 High / 🟡 Med / 🟢 Low / ⬜ Skip
-  │    Output: bộ TCs khuyến nghị + lệnh chạy
-  │    QC xác nhận
+  ├─ /qa drift REQ-N (nếu cần)  [🧠]
+  │    → DEV bugfix / QC tc-fix / BA req-clarify
   │
-  ├─ /qa drift REQ-N  (nếu nghi ngờ spec drift)
-  │    Drift disposition:
-  │      Req→Code  → DEV bugfix task
-  │      Req→TC    → QC tc-fix task
-  │      AC mơ hồ  → BA req-clarify task
-  │      Không rõ  → PM quyết định
+  ├─ Finalize TCs: assertions, page objects  [✍️]
   │
-  ├─ Finalize TCs: bổ sung assertions, page objects
+  ├─ /qa run REQ-N  [🧠]
   │
-  ├─ /qa run REQ-N
-  │    ├─ PASS → /qa matrix → Coverage Matrix
-  │    │         điền TC Coverage vào TASK-N+1 (DEV task)
-  │    │         update US → done
-  │    │         handoff(US-NNN → PM): "QC 🟢 all pass"
-  │    │
-  │    └─ FAIL → Structured Bug Report:
-  │               | TC | Expected | Actual | Assessment |
-  │               assessment: code bug / TC bug / ambiguous
-  │               Severity: blocking / partial
-  │               update qc_dev_rounds +1 trong US file
-  │               handoff(US-NNN → DEV): "TC fail"
-  │               [nếu qc_dev_rounds ≥ 2: ⚠️ Escalate to PM/BA]
+  │   PASS ──► /qa matrix  [🧠]
+  │             Điền TC Coverage vào TASK-N+1  [🧠]
+  │             update US → done  [🧠]
+  │             handoff(US-NNN → PM): "QC 🟢"  [✍️]
   │
-  └─ TASK-N+2: Done
+  └─  FAIL ──► Structured Bug Report  [🧠]
+               qc_dev_rounds +1  [✍️]
+               handoff(US-NNN → DEV): "TC fail"  [✍️]
+               [≥ 2 rounds: ⚠️ Escalate PM/BA]  [✍️]
 ```
 
 ---
 
-## 6. DEV ↔ QC — Chi tiết tương tác
+## 8. DEV ↔ QC — Chi tiết tương tác
 
 ```
 BA done                    DEV                           QC
 ───────                    ───                           ──
-TASK-N+1 unblock ─────────►                             TASK-N+2 unblock (tc-draft)
+                [🤖]──────► TASK-N+1: Ready              TASK-N+2: Ready (tc-draft) ◄──[🤖]
                             │                            │
-                            │ implement                  │ viết TC skeleton
-                            │ (parallel)                 │ từ requirements
+                            │ implement [✍️]             │ viết TC skeleton [🧠]
+                            │ /design draft [🧠]         │ từ requirements + design
                             │                            │
-                            │                            git push tc-draft
-                            │◄────────────────── (DEV có thể pull skeleton)
+                            │                            git push tc-draft [✍️]
+                            │◄────────────── (DEV có thể pull skeleton nếu cần)
                             │
-                            git push PR
-                            handoff → QC ───────────────►
-                                                         /regression task TASK-N+1
-                                                         AI đề xuất TCs
-                                                         │
-                                                         finalize TCs
-                                                         /qa run
+                            /design verify [🧠]
+                            git push PR [✍️]
+                            handoff → QC [✍️] ──────────►
+                                                [🤖]──── TASK-N+2: Ready (tc-run)
+                                                         /regression task [🧠]
+                                                         QC xác nhận TCs [✍️]
+                                                         finalize TCs [✍️]
+                                                         /qa run [🧠]
                                               ┌──────────┴──────────┐
                                             PASS                  FAIL
                                               │                     │
-                                              ▼                     ▼
-                                         /qa matrix          bug report
-                                         handoff → PM        qc_dev_rounds +1
-                                                             handoff → DEV ──────►
-                                                                              DEV fix
-                                                             ◄─────────── re-push PR
-                                                             [≥2 rounds: escalate PM]
+                                    /qa matrix [🧠]      bug report [🧠]
+                                    handoff → PM [✍️]   qc_dev_rounds +1 [✍️]
+                                                        handoff → DEV [✍️] ──────►
+                                                                         DEV fix [✍️]
+                                                        ◄─────── re-handoff → QC [✍️]
+                                                        [≥ 2 rounds: escalate [✍️]]
 ```
 
 ---
 
-## 7. Skills Reference
+## 9. Skills Reference
 
 | Skill | Role | Mô tả |
 |-------|------|-------|
 | `/pm` | PM | Tạo/quản lý User Stories, dashboard, handoffs |
 | `/requirements` | BA | Viết ACs từ US, cập nhật REQ |
 | `/task` | ALL | Tạo task, execute, đóng task, dashboard |
-| `/design` | DEV | Tạo/cập nhật design/REQ-N.md |
+| `/design` | DEV | Tạo/cập nhật design/REQ-N.md (draft → done) |
 | `/qa` | QC | Drift analysis, chạy tests, sync Coverage Matrix |
 | `/regression` | QC | Phân tích risk, đề xuất bộ TCs cần chạy |
 | `/drift` | ALL | Phát hiện spec drift: AC vs Code vs TC |
 
 ---
 
-## 8. File Structure
+## 10. File Structure
 
 ```
 .claude/docs/
 ├── us/
-│   ├── _index.md          ← PM dashboard
+│   ├── _index.md          ← PM dashboard  [🤖 auto-rebuild]
 │   └── US-NNN.md          ← PM owns (status, qc_dev_rounds)
 ├── requirements/
 │   ├── _index.md
 │   └── REQ-N.md           ← BA owns (WHEN/THEN ACs)
 ├── design/
 │   ├── _index.md
-│   └── REQ-N.md           ← DEV owns (components, data types, decisions)
+│   └── REQ-N.md           ← DEV owns (draft → done lifecycle)
 └── tasks/
-    ├── _index.md          ← all roles update
+    ├── _index.md          ← [🤖 auto-rebuild khi TASK-*.md thay đổi]
     └── TASK-NNN.md        ← role owner owns
 
 src/                       ← DEV owns
@@ -351,7 +438,7 @@ testing/
 
 ---
 
-## 9. Go-Live Status (QC → Coverage Matrix)
+## 11. Go-Live Status
 
 | Symbol | Nghĩa | Điều kiện |
 |--------|-------|-----------|
