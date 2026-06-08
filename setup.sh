@@ -62,16 +62,18 @@ mkdir -p "$SKILLS_DIR"
 case "$ROLE" in
   pm)  ROLE_SKILL_LIST="pm" ;;
   ba)  ROLE_SKILL_LIST="requirements" ;;
-  dev) ROLE_SKILL_LIST="task design" ;;
+  dev) ROLE_SKILL_LIST="design" ;;
   qc)  ROLE_SKILL_LIST="qa testing" ;;
 esac
 
 for skill in $ROLE_SKILL_LIST; do
   cp -r "$TEMPLATE_SKILLS/$skill" "$SKILLS_DIR/$skill"
 done
-# drift là global skill — copy cho mọi role
-cp -r "$TEMPLATE_SKILLS/drift" "$SKILLS_DIR/drift"
-echo "📦 Skills đã copy: $ROLE_SKILL_LIST + drift (global)"
+# Global skills — copy cho mọi role
+for skill in task drift; do
+  cp -r "$TEMPLATE_SKILLS/$skill" "$SKILLS_DIR/$skill"
+done
+echo "📦 Skills đã copy: $ROLE_SKILL_LIST + task drift (global)"
 
 # ── Testing folder — chỉ init cho QC ────────────────────────────────────────
 TEMPLATE_TESTING=".claude/templates/testing"
