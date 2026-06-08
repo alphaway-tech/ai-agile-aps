@@ -59,13 +59,18 @@ grep -n "^### REQ-N\|^### REQ-" .claude/docs/requirements.md
 # 2. Tests hiện có
 grep -rn "// REQ-N" testing/specs/
 
-# 3. Code thực thi — xác định function qua grep TRƯỚC khi Read
-grep -n "functionName\|relatedKeyword" src/lib/bills.functions.ts
-# → Read(file, offset=X, limit=40)  ← chỉ đọc đúng function, không đọc cả file
+# 3. Code thực thi — fetch on-demand từ upstream (QC không có src/ local)
+git fetch upstream
+git show upstream/main:src/<path/to/file.ts>
+# Tìm file cần đọc:
+git ls-tree -r upstream/main --name-only | grep src/
 
 # 4. Design (nếu có section liên quan)
 grep -n "REQ-N\|related-keyword" .claude/docs/design.md
 ```
+
+> **Lưu ý:** QC workspace không có `src/` local. Mọi thao tác đọc source code đều qua
+> `git show upstream/main:src/...` — chỉ đọc, không thể commit hay sửa src.
 
 **Rule:** không `Read` cả file khi chỉ cần 1-2 function. Dùng grep để xác định offset trước, rồi Read với limit nhỏ.
 

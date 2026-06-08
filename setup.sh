@@ -94,7 +94,7 @@ else
 fi
 
 # ── src/ — chỉ DEV và QC cần ────────────────────────────────────────────────
-if [[ "$ROLE" != "dev" && "$ROLE" != "qc" ]]; then
+if [[ "$ROLE" != "dev" ]]; then
   if [[ -d src ]]; then
     find src -type f | while read f; do
       git update-index --skip-worktree "$f" 2>/dev/null || true
