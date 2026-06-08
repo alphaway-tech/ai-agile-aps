@@ -4,7 +4,7 @@
 
 | Task | Title | Type | Status | Completed |
 |------|-------|------|--------|-----------|
-| — | — | — | — | — |
+| TASK-001 | Implement Todo CRUD — store, UI components, filter | feature | Done | 2026-06-08 |
 
 ---
 
