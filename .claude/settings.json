@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Edit(.claude/**)",
+      "Write(.claude/**)",
+      "Edit(CLAUDE*.md)",
+      "Write(CLAUDE*.md)",
+      "Edit(src/**)",
+      "Write(src/**)",
+      "Edit(testing/**)",
+      "Write(testing/**)",
+      "Bash(git *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(ls)",
+      "Bash(cat *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(npm *)",
+      "Bash(yarn *)",
+      "Bash(bun *)",
+      "Bash(python3 *)",
+      "Bash(mkdir *)",
+      "Bash(echo *)",
+      "Bash(sort *)",
+      "Bash(wc *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(pwd)",
+      "Bash(which *)",
+      "Bash(./sync.sh)"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build
+dist/
+build/
+.next/
+.nuxt/
+out/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+testing/test-results/
+testing/playwright-report/
+testing/testAuthToken.json
+testing/artifacts/screenshots/
+testing/artifacts/traces/
+testing/artifacts/report.json
+
+# Editors
+.DS_Store
+.idea/
+.vscode/settings.json
+*.swp
+
+# Claude local settings
+.claude/settings.local.json
