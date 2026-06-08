@@ -57,7 +57,8 @@ description: Tạo và quản lý task — global skill cho mọi role, mỗi ar
 ### QC tasks
 | Type | Khi nào |
 |------|---------|
-| `tc-write` | Viết TCs lần đầu cho REQ |
+| `tc-draft` | Viết TC skeleton từ requirements trong khi DEV đang implement (shift-left, phase 1) |
+| `tc-write` | Finalize + chạy TCs sau khi DEV done (phase 2) |
 | `tc-fix` | Sửa TC assert sai behavior |
 | `tc-add` | Thêm TC còn thiếu (gap coverage) |
 | `matrix-sync` | Cập nhật REQ-Coverage-Matrix sau test run |
@@ -249,11 +250,34 @@ Khi user bảo "làm":
 2. Đọc kỹ: Role, Type, Approach, Plan, AC, Impacted Files.
    **Plan là intent** — luôn đọc artifact thực tế trước khi thay đổi.
 
-3. Thực hiện đúng theo plan. Nếu plan có vấn đề → thông báo trước, không tự sửa.
+3. **DEV only — Design gate (bắt buộc trước khi code):**
+   ```bash
+   ls .claude/docs/design/REQ-N.md 2>/dev/null && \
+     grep "Status: draft\|Status: done" .claude/docs/design/REQ-N.md \
+     || echo "MISSING"
+   ```
+   - Nếu file **không tồn tại** hoặc **không có Status** → **DỪNG. Chạy `/design draft REQ-N` trước.**
+   - Nếu `Status: draft` hoặc `Status: done` → tiếp tục.
+
+   Sau đó đọc context:
+   ```bash
+   cat .claude/docs/requirements/REQ-N.md   # ACs
+   cat .claude/docs/design/REQ-N.md         # design constraint
+   # Đọc từng file trong Impacted Files trước khi sửa
+   ```
+
+4. **DEV only — Update US status → in-dev ngay khi bắt đầu:**
+   ```bash
+   # Edit us/US-NNN.md: status: in-dev
+   ```
+
+5. Thực hiện đúng theo plan. Nếu plan có vấn đề → thông báo trước, không tự sửa.
 
 4. Cập nhật `Status: In Progress`.
 
-5. Sau khi xong → **ĐÓNG TASK** ngay.
+5. Sau khi implement xong → chạy `/design verify REQ-N` trước khi đóng task.
+
+6. Sau khi xong → **ĐÓNG TASK** ngay.
 
 ---
 
@@ -282,10 +306,10 @@ Lessons Learned: [Bất ngờ, cạm bẫy — bắt buộc với bugfix/tc-fix]
 Completed At: YYYY-MM-DD
 ```
 
-### 3. Cập nhật `_index.md`
-```markdown
-| [TASK-NNN](TASK-NNN.md) | Role | Title | type | Done | YYYY-MM-DD |
-```
+### 3. `_index.md` tự động sync
+
+> `tasks/_index.md` được rebuild tự động sau mỗi lần Write/Edit TASK-*.md — **không cần update tay**.  
+> Nếu cần rebuild thủ công: `bash .claude/hooks/sync-index.sh`
 
 ### 4. Update artifacts liên quan (không cần confirm)
 
@@ -293,33 +317,13 @@ Completed At: YYYY-MM-DD
 |------|---------|-------------|
 | DEV | Requirement Impact != none | `requirements/REQ-N.md` + `_index.md` |
 | DEV | Design Impact != none | `design/REQ-N.md` + `design/_index.md` |
+| DEV | TC Impact != none | Thêm vào handoff commit: `⚠️ TC Impact: [TCs cần update]` để QC biết |
 | BA | req-fix/req-clarify | `requirements/REQ-N.md` |
 | QC | tc-write/tc-fix/tc-add | `testing/specs/` + `REQ-Coverage-Matrix.md` |
 
 Thêm `<!-- Last updated: TASK-NNN (YYYY-MM-DD) -->` vào file đã sửa.
 
-### 5. Regression Gate (DEV tasks only)
-
-**Nhánh A — Simple** (Requirement + Design Impact đều none):
-1. Map impacted files → spec files tương ứng
-2. Chạy: `cd testing && npx [test-runner] [spec-file]`
-3. Báo cáo: **X passed / Y failed**
-
-**Nhánh B — Complex** (có Requirement hoặc Design Impact):
-1. Xác định REQs bị ảnh hưởng
-2. `/drift REQ-N` cho từng REQ liên quan
-3. Drift nhỏ → fix inline. Drift lớn → BA tạo `req-fix` task riêng
-4. Chạy: `cd testing && npx [test-runner] [spec-file]`
-5. Báo cáo: **X passed / Y failed**
-
-**Nếu test fail → đề xuất 3 phương án:**
-| Phương án | Khi nào |
-|---|---|
-| A) Fix source code | Code mới gây regression thực sự |
-| B) QC tạo tc-fix task | TC assert sai behavior sau spec change |
-| C) Skip có lý do | Test fragile / ngoài scope task này |
-
-### 6. Handoff commit (cần user confirm)
+### 5. Handoff commit (cần user confirm)
 
 ```
 handoff(US-NNN → ROLE): TASK-NNN done — [mô tả ngắn]
@@ -331,6 +335,27 @@ handoff(US-NNN → ROLE): TASK-NNN done — [mô tả ngắn]
 | DEV (feature/bugfix) | `→ QC` |
 | QC (tc-write, all pass) | `→ PM` |
 | QC (fail) | `→ DEV` |
+
+### 6. DEV only — Update US status → in-test + PR
+
+```bash
+# Edit us/US-NNN.md: status: in-test
+```
+
+**PR Description Template:**
+```markdown
+## TASK-NNN — [Title]
+
+**US:** US-NNN | **REQ:** REQ-N
+
+### Changed Files
+- `src/file`: mô tả thay đổi
+
+### TC Impact
+none | [TCs nào cần update — QC cần biết]
+```
+
+> Regression Gate do QC chạy sau handoff bằng `/regression task TASK-NNN`.
 
 ---
 

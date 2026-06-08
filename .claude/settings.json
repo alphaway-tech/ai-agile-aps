@@ -1,4 +1,35 @@
 {
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/detect-handoff.sh 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/sync-index.sh 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/sync-index.sh 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "defaultMode": "bypassPermissions",
     "allow": [

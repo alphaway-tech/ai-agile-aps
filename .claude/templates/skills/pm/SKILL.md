@@ -40,6 +40,7 @@ priority: High | Medium | Low
 status: draft
 sprint: [YYYY-QN-SN hoặc tên sprint]
 created: YYYY-MM-DD
+qc_dev_rounds: 0
 ---
 
 ## User Story
@@ -168,8 +169,9 @@ Tạo 3 file stub trong `.claude/docs/tasks/`:
 ## TASK-N+2
 
 **Role:** QC
-**Status:** Blocked ← TASK-N+1 (DEV feature)
+**Status:** Blocked ← TASK-N (BA req-write) [phase: tc-draft]
 **Type:** tc-write
+**Phase:** tc-draft → tc-run
 **Title:** Viết TCs — US-NNN
 **US Reference:** US-NNN
 **Requirement References:** TBD
@@ -179,16 +181,21 @@ Tạo 3 file stub trong `.claude/docs/tasks/`:
 
 ---
 
+> **2-phase task (shift-left):**
+> - **tc-draft** — unblock khi TASK-N (BA) Done: đọc `requirements/REQ-N.md` + `design/REQ-N.md` (draft — DEV viết song song), dùng section **Test Entry Points** trong design để viết TC skeleton, KHÔNG chạy tests
+> - **tc-run** — unblock khi TASK-N+1 (DEV) Done: kiểm tra deviation notes trong design (status: done), finalize TCs, chạy `/qa run`, sync matrix
+
 ### Approach
-*(QC điền khi nhận handoff từ DEV — đọc requirements + design trước)*
+*(QC điền khi bắt đầu tc-draft — đọc requirements/REQ-N.md trước; sau DEV done: bổ sung design/REQ-N.md + src)*
 
 ### Plan
-*(QC điền khi nhận handoff)*
+*(tc-draft: viết skeleton / tc-run: finalize + run)*
 
 ### Acceptance Criteria
-- [ ] TCs cover 100% testable ACs
-- [ ] All TCs pass (/qa run)
+- [ ] tc-draft: skeleton cho 100% testable ACs (chưa cần pass)
+- [ ] tc-run: All TCs pass (/qa run)
 - [ ] REQ-Coverage-Matrix updated
+- [ ] TC Coverage điền vào TASK-N+1 (DEV task)
 
 ### Predicted Impact
 **Requirement Impact:** none
@@ -199,13 +206,12 @@ Tạo 3 file stub trong `.claude/docs/tasks/`:
 *(Implementation Summary điền sau khi xong)*
 
 ## TC Coverage
-| AC | Test name | Spec file |
-|----|-----------|-----------|
+→ Xem TASK-N+1 (DEV task)
 ```
 
 Thêm vào đầu bảng `tasks/_index.md`:
 ```markdown
-| [TASK-N+2](TASK-N+2.md)   | QC  | Viết TCs — US-NNN    | tc-write  | Blocked ← TASK-N+1 | — |
+| [TASK-N+2](TASK-N+2.md)   | QC  | Viết TCs — US-NNN    | tc-write  | Blocked ← TASK-N (phase: tc-draft) | — |
 | [TASK-N+1](TASK-N+1.md)   | DEV | Implement — US-NNN   | feature   | Blocked ← TASK-N   | — |
 | [TASK-N](TASK-N.md)       | BA  | Viết ACs — US-NNN    | req-write | Ready              | — |
 ```
@@ -217,7 +223,7 @@ Thêm vào đầu bảng `tasks/_index.md`:
 📋 3 stub tasks auto-generated:
    TASK-N   (BA)  req-write → Ready
    TASK-N+1 (DEV) feature   → Blocked ← TASK-N
-   TASK-N+2 (QC)  tc-write  → Blocked ← TASK-N+1
+   TASK-N+2 (QC)  tc-write  → Blocked ← TASK-N (phase: tc-draft, shift-left)
 
 👉 Tiếp theo:
    git add + commit: "us(US-NNN): [title] — draft"

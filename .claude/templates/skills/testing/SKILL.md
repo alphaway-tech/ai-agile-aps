@@ -23,12 +23,14 @@ Không có subcommand → chạy `/testing coverage` trước, hỏi user gen RE
 
 ## Bước 1 — Đọc requirements đúng cách
 
-```bash
-# Lấy danh sách section headers
-grep -n "^###\|^##" .claude/docs/requirements.md
+> **Note:** `/testing gen REQ-N` tương đương phase **tc-draft** trong `/qa` workflow — viết skeleton từ requirements trước khi DEV xong.
 
-# Đọc 1 REQ cụ thể (targeted)
-Read(.claude/docs/requirements.md, offset=X, limit=35)
+```bash
+# Liệt kê REQs hiện có
+ls .claude/docs/requirements/REQ-*.md
+
+# Đọc 1 REQ cụ thể
+cat .claude/docs/requirements/REQ-N.md
 ```
 
 Mỗi AC dạng `WHEN ... THEN ...` → map 1:1 với 1 test case.
@@ -47,6 +49,9 @@ grep -c "def test_" testing/specs/*.py 2>/dev/null
 
 # Xem page object methods
 grep -n "async \|def " testing/pages/*.ts testing/pages/*.py 2>/dev/null
+
+# Cross-check với requirements để phát hiện gap
+grep "^- AC" .claude/docs/requirements/REQ-N.md
 ```
 
 **Tag bắt buộc** — mỗi test phải có tag `// REQ-N.ACx` ngay trên `test(`:
@@ -167,7 +172,7 @@ export class [FeatureName]Page {
 ## Bước 8 — Quy trình gen 1 REQ
 
 ```
-1. Read ACs của REQ từ requirements.md
+1. cat .claude/docs/requirements/REQ-N.md   # đọc ACs
 2. grep -rn "REQ-N" testing/specs/ → xem AC nào đã cover
 3. Xác định page object methods còn thiếu → edit page object
 4. Viết test cases mới vào spec file tương ứng
@@ -221,6 +226,6 @@ Format: **Triệu chứng** → **Root cause** → **Fix**
 
 *(Điền khi project được init — map từng REQ sang spec file tương ứng)*
 
-| REQ | Spec file |
-|---|---|
-| REQ-1 | `[feature].spec.ts` |
+| REQ | Requirements file | Spec file |
+|---|---|---|
+| REQ-1 | `requirements/REQ-1.md` | `[feature].spec.ts` |

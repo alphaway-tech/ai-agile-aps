@@ -110,6 +110,11 @@ if [[ "$ROLE" != "dev" ]]; then
   echo "🚫 src/ đã ẩn (không cần cho role $ROLE)"
 fi
 
+# ── Inject hooks vào settings.json ───────────────────────────────────────────
+if [ -f ".claude/hooks/inject-settings.sh" ]; then
+  bash .claude/hooks/inject-settings.sh
+fi
+
 # ── Kiểm tra upstream remote ─────────────────────────────────────────────────
 if ! git remote | grep -q "$MASTER_REMOTE"; then
   echo ""
