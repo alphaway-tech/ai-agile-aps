@@ -54,6 +54,28 @@ for r in "${VALID_ROLES[@]}"; do
 done
 echo "🗑️  Đã xóa tất cả CLAUDE.*.md (nội dung đã có trong CLAUDE.md)"
 
+# ── Testing folder — chỉ init cho QC ────────────────────────────────────────
+TEMPLATE_TESTING=".claude/templates/testing"
+
+if [[ "$ROLE" == "qc" ]]; then
+  mkdir -p testing/specs testing/artifacts testing/fixtures
+  cp "$TEMPLATE_TESTING/playwright.config.ts" testing/playwright.config.ts
+  cp "$TEMPLATE_TESTING/global-setup.ts" testing/global-setup.ts
+  cp "$TEMPLATE_TESTING/fixtures/test.ts" testing/fixtures/test.ts
+  echo "🧪 testing/ đã được khởi tạo cho QC"
+else
+  # Xóa testing/ khỏi working tree (trừ artifacts — mọi role đọc được)
+  if [[ -d testing ]]; then
+    find testing -type f ! -path "testing/artifacts/*" | while read f; do
+      git update-index --skip-worktree "$f" 2>/dev/null || true
+      rm -f "$f"
+    done
+    # Dọn thư mục rỗng
+    find testing -mindepth 1 -type d -empty -delete 2>/dev/null || true
+  fi
+  echo "📋 testing/artifacts/ có sẵn để đọc (REQ Coverage Matrix)"
+fi
+
 # ── Kiểm tra upstream remote ─────────────────────────────────────────────────
 if ! git remote | grep -q "$MASTER_REMOTE"; then
   echo ""
