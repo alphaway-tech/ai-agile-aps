@@ -115,8 +115,13 @@ Là một [role], tôi muốn [hành động], để [lợi ích].
 # Linked REQs: REQ-N
 ```
 
-### Bước 6 — Thông báo:
-*"Đã tạo requirements/REQ-N.md cho US-NNN: [X ACs]. Ping DEV với REQ-N."*
+### Bước 6 — Commit với handoff format:
+
+```
+handoff(US-NNN → DEV): REQ-N ready — [X ACs]
+```
+
+DEV nhận tín hiệu bằng cách chạy: `git log --oneline --grep="handoff.*DEV"`
 
 ---
 

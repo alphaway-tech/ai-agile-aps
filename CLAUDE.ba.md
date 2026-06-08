@@ -27,12 +27,13 @@ Workspace này dùng để **viết Acceptance Criteria từ User Stories**. BA 
 ## Workflow của BA
 
 ```
-1. Nhận ping từ PM với US-NNN
+1. Nhận tín hiệu từ PM: git log --oneline --grep="handoff.*BA"
 2. ./sync.sh — pull về US mới nhất từ master
 3. Đọc US-NNN.md — hiểu business context, scope, out-of-scope
-4. Chạy /requirements US-NNN — viết ACs
+4. Chạy /requirements US-NNN — viết ACs → tạo requirements/REQ-N.md
 5. Update US-NNN.md: status → ac-ready, Linked REQs: REQ-N
-6. git push → PR → ping DEV với REQ-N
+6. Commit: "handoff(US-NNN → DEV): REQ-N ready — [X ACs]"
+7. git push
 ```
 
 ## Khi DEV implement xong

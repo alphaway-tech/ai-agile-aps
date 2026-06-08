@@ -191,7 +191,16 @@ Completed At: YYYY-MM-DD
 | B) Fix test case | Test assert sai behavior sau spec change |
 | C) Skip có lý do | Test fragile / ngoài scope task này |
 
-### 5. Commit git (cần user confirm)
+### 5. Handoff commit (cần user confirm)
+
+Dùng format handoff để QC nhận tín hiệu:
+```
+handoff(US-NNN → QC): TASK-NNN done — REQ-N sẵn test
+```
+
+QC nhận tín hiệu: `git log --oneline --grep="handoff.*QC"`
+
+### 6. Commit git (nếu cần commit riêng)
 
 **Feature:**
 ```

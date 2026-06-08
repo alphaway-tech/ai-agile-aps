@@ -191,6 +191,22 @@ Mở `tasks/TASK-NNN.md`, điền vào section `## TC Coverage`:
 
 Push TASK file đã update lên master để DEV và PM biết TCs nào đang verify task của họ.
 
+### Bước 4 — Handoff commit khi REQ đạt 🟢
+
+Khi REQ-N pass toàn bộ và GoLive = 🟢:
+
+```bash
+# Update US status
+# Edit us/US-NNN.md: status → done (nếu tất cả REQs của US đều 🟢)
+```
+
+Commit với handoff format:
+```
+handoff(US-NNN → PM): QC 🟢 — REQ-N all pass, ready for sign-off
+```
+
+PM nhận tín hiệu: `git log --oneline --grep="handoff.*PM"`
+
 ### Bước 3–5 — Cập nhật matrix
 
 3. Cập nhật cột ✅ Pass / ❌ Fail / 🔵 Not run cho từng REQ
