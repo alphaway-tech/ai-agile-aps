@@ -130,6 +130,7 @@ Last sync: YYYY-MM-DD
 | **Pending Approval** | Plan đã viết, chờ confirm "làm" | Role owner |
 | **In Progress** | Đang thực hiện | Role owner |
 | **Blocked ← TASK-N** | Chờ TASK-N hoàn thành trước, chưa thể bắt đầu | PM auto-gen |
+| **Blocked ← TASK-A, TASK-B** | Chờ TẤT CẢ tasks trong danh sách Done (parallel deps) | PM auto-gen |
 | **Done** | Hoàn thành, đã đóng | Role owner |
 | **Cancelled** | Hủy | PM |
 

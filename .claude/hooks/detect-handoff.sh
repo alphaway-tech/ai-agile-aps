@@ -65,8 +65,29 @@ if [ -z "$FOUND" ]; then
   exit 0
 fi
 
-# Update Status: Blocked → Ready
-# macOS sed requires '' after -i
+# Multi-dependency check: "Blocked ← TASK-003, TASK-004" → chờ tất cả Done
+BLOCKED_BY=$(grep "^\*\*Status:\*\* Blocked" "$FOUND" | grep -oE 'TASK-[0-9]+' | tr '\n' ' ')
+if [ -n "$BLOCKED_BY" ]; then
+  ALL_DONE=true
+  WAITING=""
+  for dep in $BLOCKED_BY; do
+    dep_file="$TASKS_DIR/$dep.md"
+    if [ ! -f "$dep_file" ] || ! grep -q "^\*\*Status:\*\* Done" "$dep_file" 2>/dev/null; then
+      ALL_DONE=false
+      WAITING="$WAITING $dep"
+    fi
+  done
+  if [ "$ALL_DONE" = "false" ]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "⏳ Handoff: $US → $ROLE  (chưa đủ điều kiện)"
+    echo "   $TASK_ID vẫn Blocked — chờ:$WAITING"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    exit 0
+  fi
+fi
+
+# All dependencies Done (hoặc không có dep rõ ràng) → unblock
 sed -i '' "s/^\*\*Status:\*\* Blocked.*/\*\*Status:\*\* Ready/" "$FOUND"
 
 # Stage the updated file
