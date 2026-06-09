@@ -1,5 +1,7 @@
 # Agile AI APS — Template
 
+> **Workflow đầy đủ:** [.claude/docs/workflow.md](.claude/docs/workflow.md) — mô tả toàn bộ quy trình PM → BA → DEV → TEST, handoff giữa các role, và cách tích hợp Claude Code.
+
 Bộ khung workflow tích hợp Claude Code cho team **PM → BA → DEV → TEST**.
 
 ## Cấu trúc
