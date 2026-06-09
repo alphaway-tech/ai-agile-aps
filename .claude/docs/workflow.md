@@ -1,6 +1,36 @@
 # Agile AI APS — Workflow
 
-> **Last updated:** 2026-06-08
+> **Last updated:** 2026-06-09
+
+---
+
+## 0. Setup workspace
+
+Mỗi thành viên clone repo về, chạy **một lần duy nhất**:
+
+```bash
+# 1. Setup role (copy CLAUDE.md, skills, hooks vào settings.json)
+./setup.sh [pm|ba|dev|qc]
+
+# 2. Cài git hooks (post-commit detect-handoff + commit-msg validator)
+bash .claude/setup-hooks.sh
+
+# 3. Cấu hình upstream (nếu dùng nhiều fork)
+git remote add upstream <master-repo-url>
+
+# 4. Sync dữ liệu mới nhất
+./sync.sh
+```
+
+`setup.sh [role]` làm:
+- Copy `CLAUDE.<role>.md` → `CLAUDE.md` (gitignored, local only)
+- Copy skills đúng role vào `.claude/skills/`
+- Chạy `inject-settings.sh` → ghi Claude Code hooks vào `settings.json`
+- Ẩn `src/` hoặc `testing/` khỏi working tree nếu role không cần
+
+`setup-hooks.sh` cài:
+- **post-commit**: chạy `detect-handoff.sh` sau mỗi `git commit`
+- **commit-msg**: chạy `validate-handoff-msg.sh` để validate format handoff
 
 ---
 
@@ -217,6 +247,11 @@ Mọi handoff dùng git commit format:
 handoff(US-NNN → ROLE): TASK-NNN done — [mô tả ngắn]
 ```
 
+Helper script (tùy chọn):
+```bash
+bash .claude/hooks/handoff.sh US-001 QC "REQ-1 ready — 5 ACs"
+```
+
 Xem log handoffs:
 ```bash
 git log --oneline --grep="^handoff"
@@ -226,31 +261,41 @@ git log --oneline --grep="^handoff"
 
 Khi commit có pattern trên, `detect-handoff.sh` tự động:
 1. Parse US code + target ROLE
-2. Tìm TASK của ROLE đó đang Blocked cho US đó
-3. Đổi Status → **Ready** + stage file
-4. Print thông báo
+2. Tìm TASK của ROLE đó đang `Blocked` cho US đó
+3. **Multi-dep check**: nếu task blocked nhiều TASK-N — tất cả phải Done mới unblock
+4. Đổi Status → **Ready** + `git add` file
+5. Print thông báo
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📬 Handoff: US-001 → QC
    TASK-003: Blocked → Ready (staged)
 
+   ⚡ git pull origin main
    👉 QC: mở TASK-003.md
       Điền Approach + Plan → Pending Approval
+      Bảo Claude 'làm' để bắt đầu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+**Trường hợp đặc biệt — QC → DEV (fail re-handoff):**
+Khi không còn DEV task Blocked (task đã Done), `detect-handoff.sh` tự động:
+- Tăng `qc_dev_rounds` trong `US-NNN.md`
+- In cảnh báo escalate nếu `qc_dev_rounds >= 2`
+
 Chạy qua 2 lớp:
-- **Claude Code hook** (`settings.json`) — khi Claude chạy git commit
-- **Git post-commit hook** (`bash .claude/setup-hooks.sh`) — khi user commit tay
+- **Claude Code hook** (`settings.json` `PostToolUse`) — khi Claude chạy `git commit` qua Bash tool
+- **Git post-commit hook** (`setup-hooks.sh`) — khi user commit tay ngoài Claude Code
+
+Commit-msg hook (`validate-handoff-msg.sh`) từ chối commit nếu format sai.
 
 | Từ | Sang | Khi nào |
 |----|------|---------|
 | PM | BA | US created, TASK-N Ready |
-| BA | DEV + QC | REQ-N.md xong (DEV unblock + QC tc-draft unblock đồng thời) |
+| BA | DEV + QC | REQ-N.md xong — DEV unblock + QC tc-draft unblock đồng thời |
 | DEV | QC | src/ + design done, in-test |
 | QC | PM | All TCs pass 🟢 |
-| QC | DEV | TCs fail — kèm bug report |
+| QC | DEV | TCs fail — kèm bug report, auto `qc_dev_rounds +1` |
 
 ---
 
