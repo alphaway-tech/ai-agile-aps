@@ -36,9 +36,32 @@ for f in "$TASKS_DIR"/TASK-*.md; do
 done
 
 if [ -z "$FOUND" ]; then
-  # No blocked task found for this role+US — might already be unblocked or not exist
-  echo ""
-  echo "📬 Handoff detected: $US → $ROLE (no blocked task found to unblock)"
+  # No blocked task found — if handoff → DEV, this is likely QC→DEV fail: auto-increment qc_dev_rounds
+  if [ "$ROLE" = "DEV" ]; then
+    US_FILE=$(grep -rl "^code: $US" ".claude/docs/us/" 2>/dev/null | head -1)
+    if [ -n "$US_FILE" ]; then
+      CURRENT=$(grep "^qc_dev_rounds:" "$US_FILE" 2>/dev/null | sed 's/qc_dev_rounds: *//')
+      CURRENT=${CURRENT:-0}
+      NEW=$((CURRENT + 1))
+      sed -i '' "s/^qc_dev_rounds:.*/qc_dev_rounds: $NEW/" "$US_FILE"
+      git add "$US_FILE"
+      echo ""
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "📬 Handoff: $US → DEV  (QC fail re-handoff)"
+      echo "   🔄 qc_dev_rounds: $CURRENT → $NEW (auto)"
+      if [ "$NEW" -ge 2 ]; then
+        echo "   ⚠️  ESCALATE: $US đã ping-pong DEV↔QC $NEW lần — báo PM/BA"
+      fi
+      echo ""
+      echo "   ⚡ git pull origin main   ← chạy trước khi bắt đầu"
+      echo "   👉 DEV: đọc bug report trong handoff commit"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    else
+      echo "📬 Handoff: $US → $ROLE (no blocked task + no US file found)"
+    fi
+  else
+    echo "📬 Handoff: $US → $ROLE (no blocked task found to unblock)"
+  fi
   exit 0
 fi
 
@@ -54,6 +77,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📬 Handoff: $US → $ROLE"
 echo "   $TASK_ID: Blocked → Ready (staged)"
 echo ""
+echo "   ⚡ git pull origin main   ← chạy trước khi bắt đầu"
 echo "   👉 $ROLE: mở $TASK_ID.md"
 echo "      Điền Approach + Plan → Pending Approval"
 echo "      Bảo Claude 'làm' để bắt đầu"
